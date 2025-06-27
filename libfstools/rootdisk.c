@@ -15,12 +15,22 @@
 
 #include <linux/loop.h>
 
+#define SQUASHFS_MAGIC		"hsqs"
+#define EROFS_MAGIC		0xE0F5E1E2
 #define ROOTDEV_OVERLAY_ALIGN	(64ULL * 1024ULL)
 
 struct squashfs_super_block {
 	uint32_t s_magic;
 	uint32_t pad0[9];
 	uint64_t bytes_used;
+};
+
+struct erofs_super_block {
+	uint32_t s_magic;
+	uint32_t pad0[2];
+	uint8_t blkszbits;
+	uint8_t pad1[23];
+	uint32_t blocks;
 };
 
 struct rootdev_volume {
@@ -92,10 +102,66 @@ static int get_squashfs(struct squashfs_super_block *sb)
 	return 0;
 }
 
+static int check_squashfs(uint64_t *offset)
+{
+	const char *s_magic = SQUASHFS_MAGIC;
+	struct squashfs_super_block sb;
+	int ret;
+
+	ret = get_squashfs(&sb);
+	if (ret)
+		return ret;
+
+	if (memcmp(&sb.s_magic, s_magic, sizeof(sb.s_magic)))
+		return -1;
+
+	*offset = le64_to_cpu(sb.bytes_used);
+	return 0;
+}
+
+static int get_erofs(struct erofs_super_block *sb)
+{
+	FILE *f;
+	int len;
+
+	f = fopen(rootdev, "r");
+	if (!f)
+		return -1;
+
+	if (fseek(f, 1024, SEEK_SET))
+		return -1;
+
+	len = fread(sb, sizeof(*sb), 1, f);
+	fclose(f);
+
+	if (len != 1)
+		return -1;
+
+	return 0;
+}
+
+static int check_erofs(uint64_t *offset)
+{
+	uint32_t s_magic = cpu_to_le32(EROFS_MAGIC);
+	struct erofs_super_block sb;
+	int ret;
+
+	ret = get_erofs(&sb);
+	if (ret)
+		return ret;
+
+	if (memcmp(&sb.s_magic, &s_magic, sizeof(sb.s_magic)))
+		return -1;
+
+	*offset = (uint64_t)le32_to_cpu(sb.blocks) << sb.blkszbits;
+	return 0;
+}
+
 static struct volume *rootdisk_volume_find(char *name)
 {
-	struct squashfs_super_block sb;
 	struct rootdev_volume *p;
+	uint64_t offset;
+	int ret;
 
 	if (strcmp(name, "rootfs_data") != 0)
 		return NULL;
@@ -107,17 +173,22 @@ static struct volume *rootdisk_volume_find(char *name)
 	if (!rootdev)
 		return NULL;
 
-	if (get_squashfs(&sb))
-		return NULL;
-
-	if (memcmp(&sb.s_magic, "hsqs", sizeof(sb.s_magic)) != 0)
+	/*
+	 * We support both SquashFS and EroFS.
+	 * First check for SquashFS and then check
+	 * for EroFS on new images.
+	 */
+	ret = check_squashfs(&offset);
+	if (ret < 0 || !offset)
+		ret = check_erofs(&offset);
+	if (ret < 0 || !offset)
 		return NULL;
 
 	p = calloc(1, sizeof(*p));
 	p->v.drv = &rootdisk_driver;
 	p->v.name = "rootfs_data";
 
-	p->offset = le64_to_cpu(sb.bytes_used);
+	p->offset = offset;
 	p->offset = ((p->offset + (ROOTDEV_OVERLAY_ALIGN - 1)) &
 		     ~(ROOTDEV_OVERLAY_ALIGN - 1));
 

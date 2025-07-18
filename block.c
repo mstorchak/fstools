@@ -342,7 +342,7 @@ static int swap_add(struct uci_section *s)
 		m->prio = ((m->prio << SWAP_FLAG_PRIO_SHIFT) & SWAP_FLAG_PRIO_MASK) | SWAP_FLAG_PREFER;
 
 	if (discard) {
-		if (!strcmp(discard, "yes"))
+		if (!strcmp(discard, "yes") || !strcmp(discard, "1") || !strcmp(discard, "on"))
 			 m->prio |= SWAP_FLAG_DISCARD;
 		else if (!strcmp(discard, "pages"))
 			 m->prio |= (SWAP_FLAG_DISCARD | SWAP_FLAG_DISCARD_PAGES);

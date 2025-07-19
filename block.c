@@ -1843,11 +1843,11 @@ static int main_info(int argc, char **argv)
 static int swapon_usage(void)
 {
 	fprintf(stderr, "Usage: swapon [-s] [-a] [ [[-p pri] [-d [once|pages]] DEVICE] ]\n\n"
-		"\tStart swapping on [DEVICE]\n"
-		" -a\tStart swapping on all swap devices\n"
-		" -p pri\tSet priority of swap device\n"
+		"\t\t\tStart swapping on [DEVICE]\n"
+		" -a\t\t\tStart swapping on all swap devices\n"
+		" -p pri\t\t\tSet priority of swap device\n"
 		" -d [once|pages]\tEnable discard, using 'once', 'pages' or both (default) discard policy\n"
-		" -s\tShow summary\n");
+		" -s\t\t\tShow summary\n");
 	return -1;
 }
 

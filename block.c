@@ -1863,7 +1863,7 @@ static int main_swapon(int argc, char **argv)
 	struct stat st;
 	int err;
 
-	while ((ch = getopt(argc, argv, "ap:d::s")) != -1) {
+	while ((ch = getopt(argc, argv, "ap:sd::")) != -1) {
 		switch(ch) {
 		case 's':
 			fp = fopen("/proc/swaps", "r");
@@ -1894,30 +1894,29 @@ static int main_swapon(int argc, char **argv)
 				flags |= ((pri << SWAP_FLAG_PRIO_SHIFT) & SWAP_FLAG_PRIO_MASK) | SWAP_FLAG_PREFER;
 			break;
 		case 'd':
+			lineptr = NULL;
 			flags |= SWAP_FLAG_DISCARD;
-			if (optarg) {
-				printf("d: optarg: %s\n", optarg);
-				if (!strcmp(optarg, "once"))
+			if (optarg)
+				lineptr = optarg;
+			else if (optind < argc && argv[optind][0] != '-') {
+                    lineptr = argv[optind];
+                    optind++;
+			}
+			if (lineptr) {
+				if (!strcmp(lineptr, "once"))
 					flags |= SWAP_FLAG_DISCARD_ONCE;
-				else if (!strcmp(optarg, "pages"))
+				else if (!strcmp(lineptr, "pages"))
 					flags |= SWAP_FLAG_DISCARD_PAGES;
 				else
 					return swapon_usage();
 			}
 			break;
 		default:
-			printf("optopt: %c, optind: %d, ch: %c\n", optopt, optind, ch);
-			if (optarg)
-				printf("default: optarg: %s\n", optarg);
 			return swapon_usage();
 		}
 	}
 
 	if (optind != (argc - 1)) {
-		printf("optind != (argc - 1)\n");
-		printf("optopt: %c, optind: %d, ch: %c\n", optopt, optind, ch);
-		if (optarg)
-			printf("default: optarg: %s\n", optarg);
 		return swapon_usage();
 	}
 

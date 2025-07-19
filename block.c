@@ -1896,7 +1896,7 @@ static int main_swapon(int argc, char **argv)
 		case 'd':
 			flags |= SWAP_FLAG_DISCARD;
 			if (optarg) {
-				printf("optarg: %s\n", optarg);
+				printf("d: optarg: %s\n", optarg);
 				if (!strcmp(optarg, "once"))
 					flags |= SWAP_FLAG_DISCARD_ONCE;
 				else if (!strcmp(optarg, "pages"))
@@ -1906,6 +1906,9 @@ static int main_swapon(int argc, char **argv)
 			}
 			break;
 		default:
+			printf("optopt: %c, optind: %d, ch: %c\n", optopt, optind, ch);
+			if (optarg)
+				printf("default: optarg: %s\n", optarg);
 			return swapon_usage();
 		}
 	}

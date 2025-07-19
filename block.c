@@ -1896,6 +1896,7 @@ static int main_swapon(int argc, char **argv)
 		case 'd':
 			flags |= SWAP_FLAG_DISCARD;
 			if (optarg) {
+				printf("optarg: %s\n", optarg);
 				if (!strcmp(optarg, "once"))
 					flags |= SWAP_FLAG_DISCARD_ONCE;
 				else if (!strcmp(optarg, "pages"))

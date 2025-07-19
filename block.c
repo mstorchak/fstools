@@ -1913,8 +1913,13 @@ static int main_swapon(int argc, char **argv)
 		}
 	}
 
-	if (optind != (argc - 1))
+	if (optind != (argc - 1)) {
+		printf("optind != (argc - 1)\n");
+		printf("optopt: %c, optind: %d, ch: %c\n", optopt, optind, ch);
+		if (optarg)
+			printf("default: optarg: %s\n", optarg);
 		return swapon_usage();
+	}
 
 	if (stat(argv[optind], &st) || (!S_ISBLK(st.st_mode) && !S_ISREG(st.st_mode))) {
 		ULOG_ERR("%s is not a block device or file\n", argv[optind]);

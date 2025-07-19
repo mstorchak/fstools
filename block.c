@@ -1863,7 +1863,7 @@ static int main_swapon(int argc, char **argv)
 	struct stat st;
 	int err;
 
-	while ((ch = getopt(argc, argv, "ap:sd::")) != -1) {
+	while ((ch = getopt(argc, argv, "ap:d::s")) != -1) {
 		switch(ch) {
 		case 's':
 			fp = fopen("/proc/swaps", "r");
@@ -1895,12 +1895,14 @@ static int main_swapon(int argc, char **argv)
 			break;
 		case 'd':
 			flags |= SWAP_FLAG_DISCARD;
-			if (!strcmp(optarg, "once"))
-				flags |= SWAP_FLAG_DISCARD_ONCE;
-			else if (!strcmp(optarg, "pages"))
-				flags |= SWAP_FLAG_DISCARD_PAGES;
-			else
-				return swapon_usage();
+			if (optarg) {
+				if (!strcmp(optarg, "once"))
+					flags |= SWAP_FLAG_DISCARD_ONCE;
+				else if (!strcmp(optarg, "pages"))
+					flags |= SWAP_FLAG_DISCARD_PAGES;
+				else
+					return swapon_usage();
+			}
 			break;
 		default:
 			return swapon_usage();

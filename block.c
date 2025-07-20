@@ -1898,6 +1898,8 @@ static int main_swapon(int argc, char **argv)
 			flags |= SWAP_FLAG_DISCARD;
 			if (optarg)
 				lineptr = optarg;
+			else if (optind == (argc - 1))
+				break;
 			else if (optind < argc && argv[optind][0] != '-') {
                     lineptr = argv[optind];
                     optind++;
